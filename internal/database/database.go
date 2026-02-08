@@ -13,15 +13,10 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
-// Service represents a service that interacts with a database.
 type Service interface {
-	// Health returns a map of health status information.
-	// The keys and values in the map are service-specific.
 	Health() map[string]string
-
-	// Close terminates the database connection.
-	// It returns an error if the connection cannot be closed.
 	Close() error
+	DB() *sql.DB
 }
 
 type service struct {
@@ -39,20 +34,42 @@ var (
 )
 
 func New() Service {
-	// Reuse Connection
 	if dbInstance != nil {
 		return dbInstance
 	}
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&search_path=%s", username, password, host, port, database, schema)
+
+	connStr := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable&search_path=%s",
+		username,
+		password,
+		host,
+		port,
+		database,
+		schema,
+	)
+
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("failed to open db:", err)
 	}
-	dbInstance = &service{
-		db: db,
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := db.PingContext(ctx); err != nil {
+		log.Fatal("failed to connect db:", err)
 	}
+
+	log.Println("PostgreSQL connected:", database)
+
+	dbInstance = &service{db: db}
 	return dbInstance
 }
+
+func (s *service) DB() *sql.DB {
+	return s.db
+}
+
 
 // Health checks the health of the database connection by pinging the database.
 // It returns a map with keys indicating various health statistics.

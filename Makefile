@@ -4,6 +4,8 @@
 all: build test
 
 build:
+	swag init -g cmd/api/main.go --parseDependency --parseInternal
+	go build -o main cmd/api/main.go
 	@echo "Building..."
 	
 	

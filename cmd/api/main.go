@@ -1,3 +1,14 @@
+// @title Maspos API
+// @version 1.0
+// @description Backend API for Maspos
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.email support@maspos.com
+
+// @license.name MIT
+// @host localhost:8080
+// @BasePath /
 package main
 
 import (
@@ -8,7 +19,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
+	_ "maspos-be-go/docs"
 	"maspos-be-go/internal/server"
 )
 
